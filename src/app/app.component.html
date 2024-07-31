@@ -11,3 +11,32 @@
 <br />
 <br />
 <button (click)="onGetUser()">Get User</button>
+
+<div *ngIf="!this.chats">
+  <h2>Loading...</h2>
+</div>
+
+<div *ngFor="let chatItem of chats">
+  --------------------- <br />
+  chat type: {{ getChatType(chatItem.chatType) }} <br />
+  <span *ngIf="getChatType(chatItem.chatType) == 'group'">
+    topic: {{ chatItem.topic }}<br />
+  </span>
+
+  chat members:
+  <span *ngIf="chatItem.members">
+    <span *ngFor="let member of chatItem.members; let last = last">
+      {{ member.displayName }}{{ last ? "" : ", " }}
+    </span>
+  </span>
+  <button
+    *ngIf="chatItem.members == null"
+    (click)="loadChatMembers(chatItem.id!)"
+  >
+    Load Members
+  </button>
+  <br />
+
+  messages: {{ chatItem.messages | json }} <br />
+  ---------------------<br /><br /><br />
+</div>
