@@ -1,16 +1,9 @@
-<button (click)="onLogout()" [style]="'float: right'">Log Out</button>
-
-<input
-  type="text"
-  [(ngModel)]="textBoxContent"
-  (keyup.enter)="onButtonClick()"
-/>
-<br />
-<button (click)="onButtonClick()">Submit</button>
-
-<br />
-<br />
+<button (click)="onLogout()">Log Out</button>
 <button (click)="onGetUser()">Get User</button>
+<button (click)="onButtonClick()">Send 'hello world' to Dev Chat</button>
+
+<br />
+<br />
 
 <div *ngIf="!this.chats">
   <h2>Loading...</h2>
