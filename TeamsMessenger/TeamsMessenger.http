@@ -1,0 +1,6 @@
+@TeamsMessenger_HostAddress = http://localhost:5196
+
+GET {{TeamsMessenger_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
