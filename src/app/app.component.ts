@@ -1,10 +1,15 @@
 import { CommonModule, JsonPipe } from '@angular/common';
-import { HttpClient, HttpClientModule } from '@angular/common/http'; // Import HttpClient and HttpClientModule
+import {
+  HttpClient,
+  HttpClientModule,
+  HttpHeaders,
+} from '@angular/common/http'; // Import HttpClient and HttpClientModule
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterOutlet } from '@angular/router';
 import { MsalService } from '@azure/msal-angular';
-import { Chat } from '@microsoft/microsoft-graph-types';
+import { User } from '@microsoft/microsoft-graph-types';
+import { IDropdownSettings } from 'ng-multiselect-dropdown';
 
 @Component({
   selector: 'app-root',
@@ -20,16 +25,20 @@ import { Chat } from '@microsoft/microsoft-graph-types';
   styleUrl: './app.component.scss',
 })
 export class AppComponent {
-  title = 'teamsMessenger-workspace';
-  textBoxContent: string = '';
-  chats: Chat[] | null = null;
-  selectedChat: Chat | null = null;
+  title = 'teams messenger';
+  loadingUsers: boolean = true;
+  users: User[] | null = null;
+  selectedUsers: User[] = [];
+  messageToSend: string = 'this is a test';
+
+  constructor(private msalService: MsalService, private http: HttpClient) {}
 
   ngOnInit() {
-    // get user chats
-    this.http.get('https://localhost:7085/api/message/chats').subscribe(
+    // get users
+    this.http.get('https://localhost:7085/api/graph/users').subscribe(
       (response: any) => {
-        this.chats = response;
+        this.users = response;
+        this.loadingUsers = false;
       },
       (error) => {
         console.error('Error:', error);
@@ -37,64 +46,36 @@ export class AppComponent {
     );
   }
 
-  // onSelectChat(chat: Chat) {
-  //   this.selectedChat = chat;
-  // }
+  addUser(userId: string) {
+    const user = this.users!.find((user) => user.id === userId);
+    if (user) {
+      this.selectedUsers.push(user);
+    }
+  }
 
-  constructor(private msalService: MsalService, private http: HttpClient) {}
-  onButtonClick() {
-    console.log('TextBox Content:', this.textBoxContent);
+  removeUser(userId: string) {
+    const index = this.selectedUsers.findIndex((user) => user.id === userId);
+    if (index !== -1) {
+      this.selectedUsers.splice(index, 1);
+    }
+  }
+
+  send() {
+    const userIds = this.selectedUsers.map((user) => user.id);
+    const payload = {
+      userIds: userIds,
+      message: this.messageToSend,
+    };
+
+    const headers = new HttpHeaders().set('Content-Type', 'application/json');
 
     this.http
-      .post('https://localhost:7085/api/message', {
-        content: this.textBoxContent,
+      .post('https://localhost:7085/api/graph/send', JSON.stringify(payload), {
+        headers,
       })
       .subscribe(
         (response) => {
           console.log('Response:', response);
-        },
-        (error) => {
-          console.error('Error:', error);
-        }
-      );
-  }
-
-  onLogout() {
-    this.msalService.logout();
-  }
-
-  onGetUser() {
-    this.http.get('https://localhost:7085/api/user').subscribe(
-      (response) => {
-        console.log('Response:', response);
-      },
-      (error) => {
-        console.error('Error:', error);
-      }
-    );
-  }
-
-  getChatType(chatType: any): string {
-    switch (chatType) {
-      case 0:
-        return 'oneOnOne';
-      case 1:
-        return 'group';
-      case 2:
-        return 'meeting';
-      default:
-        return 'unknown';
-    }
-  }
-
-  loadChatMembers(id: string) {
-    this.http
-      .get(`https://localhost:7085/api/message/chats/${id}/members`)
-      .subscribe(
-        (response: any) => {
-          console.log('Chat Members:', response);
-          const index = this.chats!.findIndex((chat) => chat.id === id);
-          this.chats![index].members = response;
         },
         (error) => {
           console.error('Error:', error);

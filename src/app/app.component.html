@@ -1,35 +1,31 @@
-<button (click)="onLogout()">Log Out</button>
-<button (click)="onGetUser()">Get User</button>
-<button (click)="onButtonClick()">Send 'hello world' to Dev Chat</button>
+<div *ngIf="loadingUsers">Loading users...</div>
 
-<br />
-<br />
+<div *ngIf="users" class="container">
+  <div class="column">
+    <h1>User List</h1>
+    <div *ngIf="!loadingUsers">
+      <div *ngFor="let user of users">
+        {{ user.displayName }}
+        <button (click)="addUser(user.id!)">Add User</button>
+        <br />
+      </div>
+    </div>
+  </div>
 
-<div *ngIf="!this.chats">
-  <h2>Loading...</h2>
-</div>
+  <div class="column">
+    <h1>Selected Users</h1>
+    <div *ngFor="let user of selectedUsers">
+      {{ user.displayName }}
+      <button (click)="removeUser(user.id!)">Remove User</button>
+      <br />
+    </div>
+    ---------------------<br />
 
-<div *ngFor="let chatItem of chats">
-  --------------------- <br />
-  chat type: {{ getChatType(chatItem.chatType) }} <br />
-  <span *ngIf="getChatType(chatItem.chatType) == 'group'">
-    topic: {{ chatItem.topic }}<br />
-  </span>
+    <h1>Message to Send</h1>
 
-  chat members:
-  <span *ngIf="chatItem.members">
-    <span *ngFor="let member of chatItem.members; let last = last">
-      {{ member.displayName }}{{ last ? "" : ", " }}
-    </span>
-  </span>
-  <button
-    *ngIf="chatItem.members == null"
-    (click)="loadChatMembers(chatItem.id!)"
-  >
-    Load Members
-  </button>
-  <br />
+    <textarea [(ngModel)]="messageToSend"></textarea>
+    <br />
 
-  messages: {{ chatItem.messages | json }} <br />
-  ---------------------<br /><br /><br />
+    <button (click)="send()">Send to Selected Users</button>
+  </div>
 </div>
