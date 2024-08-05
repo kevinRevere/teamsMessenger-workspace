@@ -40,12 +40,9 @@ public class MessageController : ControllerBase
     private readonly string _azureClientId;
     private readonly string _azureClientSecret;
     private readonly string _azureTenantId;
-    //private readonly string[] _scopes = new[] { "Chat.Read" };
-    //private readonly UserService _userService;
 
-    public MessageController(IConfiguration configuration, UserService userService)
+    public MessageController(IConfiguration configuration)
     {
-        //_userService = userService;
         _azureClientId = configuration.GetSection("AzureAd:ClientId").Value!;
         _azureClientSecret = configuration.GetSection("AzureAd:ClientSecret").Value!;
         _azureTenantId = configuration.GetSection("AzureAd:TenantId").Value!;
@@ -62,10 +59,10 @@ public class MessageController : ControllerBase
     {
         string[] scopes = new string[] { "https://graph.microsoft.com/.default" };
         IConfidentialClientApplication confidentialClientApplication = ConfidentialClientApplicationBuilder
-                        .Create(_graphClientId)
-                        .WithClientSecret(_graphClientSecret)
-                        .WithTenantId(_graphTenantId)
-                        .Build();
+            .Create(_graphClientId)
+            .WithClientSecret(_graphClientSecret)
+            .WithTenantId(_graphTenantId)
+            .Build();
 
         var tokenProvider = new TokenProvider(confidentialClientApplication, scopes);
         var authenticationProvider = new BaseBearerTokenAuthenticationProvider(tokenProvider);
@@ -125,7 +122,7 @@ public class MessageController : ControllerBase
         {
             return BadRequest("Must have at least 2 user ids");
         }
-        // users cannot create chat that they are not in
+        // users cannot create chat that they are not in - check for this
 
         GraphServiceClient graphClient = GetUserAuthGraphClient();
 
