@@ -137,19 +137,50 @@ public class MessageController : ControllerBase
             }
         } as ConversationMember).ToList();
 
-        // create chat
-        var chatType = request.UserIds.Length > 2 ? ChatType.Group : ChatType.OneOnOne;
-        var requestBody = new Chat
-        {
-            ChatType = chatType,
-            Members = members,
-        };
-        var newChatResponse = await graphClient.Chats.PostAsync(requestBody);
-        if (newChatResponse == null)
+        // see if chat already exists
+        ChatCollectionResponse? existingChats = await graphClient.Me.Chats.GetAsync();
+        string? existingChatId = null;
+        if (existingChats == null)
         {
             return NotFound();
         }
-        var chatId = newChatResponse.Id;
+        foreach (var chat in existingChats.Value)
+        {
+            var chatMembers = await graphClient.Chats[chat.Id].Members.GetAsync();
+
+            var chatMemberIds = chatMembers.Value
+                .OfType<AadUserConversationMember>()
+                .Select(m => m.UserId)
+                .ToList();
+
+            if (chatMemberIds.Count == request.UserIds.Count() && !chatMemberIds.Except(request.UserIds).Any())
+            {
+                existingChatId = chat.Id;
+                break;
+            }
+        }
+
+        string chatId;
+        if (existingChatId != null)
+        {
+            chatId = existingChatId;
+        }
+        else
+        {
+            // create chat
+            var chatType = request.UserIds.Length > 2 ? ChatType.Group : ChatType.OneOnOne;
+            var requestBody = new Chat
+            {
+                ChatType = chatType,
+                Members = members,
+            };
+            var newChatResponse = await graphClient.Chats.PostAsync(requestBody);
+            if (newChatResponse == null)
+            {
+                return NotFound();
+            }
+            chatId = newChatResponse.Id;
+        }
 
         // send message        
         var newChatMessage = new ChatMessage
